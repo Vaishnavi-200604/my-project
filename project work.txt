@@ -1,99 +1,44 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-  <meta charset="UTF-8">
-  <title>Job Recommendation System</title>
-  <style>
-    body {
-      font-family: Arial, sans-serif;
-      margin: 30px;
-      background-color: #f4f4f4;
-    }
-    h2 {
-      color: #333;
-    }
-    label {
-      display: block;
-      margin-top: 15px;
-      font-weight: bold;
-    }
-    input[type="text"], input[type="number"], select {
-      width: 300px;
-      padding: 8px;
-      margin-top: 5px;
-    }
-    .qualification-group {
-      margin-bottom: 10px;
-    }
-    button {
-      margin-top: 10px;
-      padding: 8px 12px;
-      background-color: #007BFF;
-      color: white;
-      border: none;
-      cursor: pointer;
-    }
-    button:hover {
-      background-color: #0056b3;
-    }
-  </style>
-</head>
-<body>
+import pandas as pd
+from sklearn.feature_extraction.text import TfidfVectorizer
+from sklearn.metrics.pairwise import cosine_similarity
 
-  <h2>Job Recommendation Form</h2>
+# 1. Sample Job Data (replace with your actual data)
+job_data = {
+    'job_id': [1, 2, 3, 4],
+    'title': ['Software Engineer', 'Data Scientist', 'Marketing Manager', 'Web Developer'],
+    'description': [
+        'Develop and maintain software applications using Python and Java. Experience with cloud platforms like AWS is a plus.',
+        'Analyze large datasets, build machine learning models, and interpret results. Strong skills in Python, R, and SQL.',
+        'Develop marketing strategies, manage campaigns, and analyze market trends. Experience with digital marketing tools.',
+        'Build and maintain websites using HTML, CSS, JavaScript, and frameworks like React or Angular.'
+    ]
+}
+jobs_df = pd.DataFrame(job_data)
 
-  <form id="jobForm">
-    <label for="name">Name:</label>
-    <input type="text" id="name" name="name" required>
+# 2. Text Preprocessing and Vectorization
+tfidf_vectorizer = TfidfVectorizer(stop_words='english')
+job_description_vectors = tfidf_vectorizer.fit_transform(jobs_df['description'])
 
-    <label for="age">Age:</label>
-    <input type="number" id="age" name="age" min="0" required>
+# Function to get recommendations
+def recommend_jobs(user_profile_text, num_recommendations=3):
+    # Vectorize user profile
+    user_profile_vector = tfidf_vectorizer.transform([user_profile_text])
 
-    <label>Qualifications:</label>
-    <div id="qualifications">
-      <div class="qualification-group">
-        <input type="text" name="qualification[]" placeholder="Enter qualification">
-      </div>
-    </div>
-    <button type="button" onclick="addQualification()">Add More</button>
+    # Calculate cosine similarity
+    similarity_scores = cosine_similarity(user_profile_vector, job_description_vectors).flatten()
 
-    <label for="strengths">Strengths (select up to 3):</label>
-    <select id="strengths" name="strengths" multiple size="5">
-      <option value="Communication">Communication</option>
-      <option value="Teamwork">Teamwork</option>
-      <option value="Problem-solving">Problem-solving</option>
-      <option value="Creativity">Creativity</option>
-      <option value="Adaptability">Adaptability</option>
-    </select>
+    # Get indices of top recommendations
+    top_job_indices = similarity_scores.argsort()[-num_recommendations:][::-1]
 
-    <br><br>
-    <button type="submit">Submit</button>
-  </form>
+    # Return recommended jobs
+    recommended_jobs = jobs_df.iloc[top_job_indices]
+    return recommended_jobs[['title', 'description']]
 
-  <script>
-    function addQualification() {
-      const container = document.getElementById("qualifications");
-      const newInput = document.createElement("div");
-      newInput.className = "qualification-group";
-      newInput.innerHTML = '<input type="text" name="qualification[]" placeholder="Enter qualification">';
-      container.appendChild(newInput);
-    }
-
-    document.getElementById("jobForm").addEventListener("submit", function(e) {
-      e.preventDefault();
-      const selectedStrengths = Array.from(document.getElementById("strengths").selectedOptions).map(opt => opt.value);
-      if (selectedStrengths.length > 3) {
-        alert("Please select no more than 3 strengths.");
-        return;
-      }
-      alert("Form submitted successfully!");
-      // You can add logic here to send data to backend or process it
-    });
-  </script>
-
-</body>
-</html>
-
+# Example Usage
+user_skills = "I am proficient in Python and machine learning, and enjoy analyzing data."
+recommendations = recommend_jobs(user_skills, num_recommendations=2)
+print("Recommended Jobs:")
+print(recommendations)
 
 
 
