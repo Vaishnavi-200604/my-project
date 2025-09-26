@@ -2,98 +2,100 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Smart Job Recommendation System</title>
+  <title>Job Recommendation System</title>
   <style>
     body {
       font-family: Arial, sans-serif;
-      background-color: #f4f7fb;
-      display: flex;
-      justify-content: center;
-      align-items: center;
-      height: 100vh;
-    }
-    .form-container {
-      background: #fff;
-      padding: 25px;
-      border-radius: 12px;
-      box-shadow: 0 4px 12px rgba(0,0,0,0.1);
-      width: 400px;
+      margin: 30px;
+      background-color: #f4f4f4;
     }
     h2 {
-      text-align: center;
       color: #333;
-      margin-bottom: 20px;
     }
     label {
       display: block;
-      margin-top: 12px;
+      margin-top: 15px;
       font-weight: bold;
-      color: #555;
     }
-    input, select, button, textarea {
-      width: 100%;
+    input[type="text"], input[type="number"], select {
+      width: 300px;
       padding: 8px;
-      margin-top: 6px;
-      border: 1px solid #ccc;
-      border-radius: 6px;
+      margin-top: 5px;
+    }
+    .qualification-group {
+      margin-bottom: 10px;
     }
     button {
+      margin-top: 10px;
+      padding: 8px 12px;
       background-color: #007BFF;
       color: white;
-      font-weight: bold;
       border: none;
       cursor: pointer;
-      margin-top: 20px;
     }
     button:hover {
       background-color: #0056b3;
     }
-    .add-btn {
-      background-color: #28a745;
-      margin-top: 8px;
-    }
-    .add-btn:hover {
-      background-color: #1e7e34;
-    }
   </style>
 </head>
 <body>
-  <div class="form-container">
-    <h2>Job Recommendation Form</h2>
-    <form>
-      <label for="name">Full Name:</label>
-      <input type="text" id="name" placeholder="Enter your name" required>
 
-      <label for="age">Age:</label>
-      <input type="number" id="age" placeholder="Enter your age" required>
+  <h2>Job Recommendation Form</h2>
 
-      <label for="qualification">Qualification:</label>
-      <input type="text" id="qualification" placeholder="Enter your qualification">
-      <button type="button" class="add-btn">+ Add More</button>
+  <form id="jobForm">
+    <label for="name">Name:</label>
+    <input type="text" id="name" name="name" required>
 
-      <label for="skills">Technical Skills:</label>
-      <textarea id="skills" placeholder="E.g. Python, Java, SQL" rows="3"></textarea>
+    <label for="age">Age:</label>
+    <input type="number" id="age" name="age" min="0" required>
 
-      <label for="strengths">Select Your Strengths:</label>
-      <select id="strengths" name="strengths" multiple>
-        <option value="communication">Communication</option>
-        <option value="teamwork">Teamwork</option>
-        <option value="leadership">Leadership</option>
-        <option value="problem-solving">Problem-solving</option>
-        <option value="creativity">Creativity</option>
-        <option value="analytical">Analytical Thinking</option>
-        <option value="adaptability">Adaptability</option>
-        <option value="time-management">Time Management</option>
-        <option value="critical-thinking">Critical Thinking</option>
-        <option value="decision-making">Decision Making</option>
-      </select>
+    <label>Qualifications:</label>
+    <div id="qualifications">
+      <div class="qualification-group">
+        <input type="text" name="qualification[]" placeholder="Enter qualification">
+      </div>
+    </div>
+    <button type="button" onclick="addQualification()">Add More</button>
 
-      <button type="submit">Find Suitable Jobs</button>
-    </form>
-  </div>
+    <label for="strengths">Strengths (select up to 3):</label>
+    <select id="strengths" name="strengths" multiple size="5">
+      <option value="Communication">Communication</option>
+      <option value="Teamwork">Teamwork</option>
+      <option value="Problem-solving">Problem-solving</option>
+      <option value="Creativity">Creativity</option>
+      <option value="Adaptability">Adaptability</option>
+    </select>
+
+    <br><br>
+    <button type="submit">Submit</button>
+  </form>
+
+  <script>
+    function addQualification() {
+      const container = document.getElementById("qualifications");
+      const newInput = document.createElement("div");
+      newInput.className = "qualification-group";
+      newInput.innerHTML = '<input type="text" name="qualification[]" placeholder="Enter qualification">';
+      container.appendChild(newInput);
+    }
+
+    document.getElementById("jobForm").addEventListener("submit", function(e) {
+      e.preventDefault();
+      const selectedStrengths = Array.from(document.getElementById("strengths").selectedOptions).map(opt => opt.value);
+      if (selectedStrengths.length > 3) {
+        alert("Please select no more than 3 strengths.");
+        return;
+      }
+      alert("Form submitted successfully!");
+      // You can add logic here to send data to backend or process it
+    });
+  </script>
+
 </body>
 </html>
+
+
+
 
 
 
