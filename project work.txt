@@ -1,6 +1,12 @@
 import java.util.*;
 
 public class Main {
+    // helper: normalization used for matching keys (lowercase + remove non-alnum)
+    private static String normalize(String s) {
+        if (s == null) return "";
+        return s.toLowerCase().replaceAll("[^a-z0-9]", "");
+    }
+
     // normalized job DB: keys are normalized (lowercase, non-alnum removed)
     private static final Map<String, List<String>> JOB_DB = new HashMap<>();
 
@@ -91,9 +97,6 @@ public class Main {
         return out;
     }
 
-    // helper: normalization used for matching keys (lowercase + remove non-alnum)
-    private static String normalize(String s) {
-        if (s == null) return "";
-        return s.toLowerCase().replaceAll("[^a-z0-9]", "");
-    }
+
 }
+
