@@ -1,45 +1,19 @@
-import pandas as pd
-from sklearn.feature_extraction.text import TfidfVectorizer
-from sklearn.metrics.pairwise import cosine_similarity
 
-# 1. Sample Job Data (replace with your actual data)
-job_data = {
-    'job_id': [1, 2, 3, 4],
-    'title': ['Software Engineer', 'Data Scientist', 'Marketing Manager', 'Web Developer'],
-    'description': [
-        'Develop and maintain software applications using Python and Java. Experience with cloud platforms like AWS is a plus.',
-        'Analyze large datasets, build machine learning models, and interpret results. Strong skills in Python, R, and SQL.',
-        'Develop marketing strategies, manage campaigns, and analyze market trends. Experience with digital marketing tools.',
-        'Build and maintain websites using HTML, CSS, JavaScript, and frameworks like React or Angular.'
-    ]
-}
-jobs_df = pd.DataFrame(job_data)
+import time
 
-# 2. Text Preprocessing and Vectorization
-tfidf_vectorizer = TfidfVectorizer(stop_words='english')
-job_description_vectors = tfidf_vectorizer.fit_transform(jobs_df['description'])
+def countdown(t):
+    while t:
+        mins, secs = divmod(t, 60)
+        timer = '{:02d}:{:02d}'.format(mins, secs)
+        print(timer, end='\r')  # Overwrite the line each second
+        time.sleep(1)
+        t -= 1
 
-# Function to get recommendations
-def recommend_jobs(user_profile_text, num_recommendations=3):
-    # Vectorize user profile
-    user_profile_vector = tfidf_vectorizer.transform([user_profile_text])
+    print("Fire in the hole!!")
 
-    # Calculate cosine similarity
-    similarity_scores = cosine_similarity(user_profile_vector, job_description_vectors).flatten()
+t = input("Enter the time in seconds: ")
 
-    # Get indices of top recommendations
-    top_job_indices = similarity_scores.argsort()[-num_recommendations:][::-1]
-
-    # Return recommended jobs
-    recommended_jobs = jobs_df.iloc[top_job_indices]
-    return recommended_jobs[['title', 'description']]
-
-# Example Usage
-user_skills = "I am proficient in Python and machine learning, and enjoy analyzing data."
-recommendations = recommend_jobs(user_skills, num_recommendations=2)
-print("Recommended Jobs:")
-print(recommendations)
-
+countdown(int(t))
 
 
 
