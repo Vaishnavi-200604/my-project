@@ -1,116 +1,16 @@
-import { useState } from "react";
+let users = [];
 
-export default function Home() {
-  const [name, setName] = useState("");
-  const [age, setAge] = useState("");
-  const [qualifications, setQualifications] = useState([""]);
-  const [skills, setSkills] = useState([]);
-  const [strengths, setStrengths] = useState([]);
-  const [recommendations, setRecommendations] = useState([]);
-
-  const allSkills = ["Python", "SQL", "Java", "SEO"];
-  const allStrengths = ["Problem-solving", "Teamwork", "Communication", "Creativity", "Analytical Thinking"];
-
-  const handleAddQualification = () => {
-    setQualifications([...qualifications, ""]);
-  };
-
-  const handleQualificationChange = (index, value) => {
-    const updated = [...qualifications];
-    updated[index] = value;
-    setQualifications(updated);
-  };
-
-  const handleSubmit = async (e) => {
-    e.preventDefault();
-
-    const response = await fetch("/api/users", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ name, age, qualifications, skills, strengths })
-    });
-
-    const data = await response.json();
-    const userId = data.user.id;
-
-    const recRes = await fetch(`/api/recommend?userId=${userId}`);
-    const recData = await recRes.json();
-    setRecommendations(recData.recommendations);
-  };
-
-  return (
-    <div style={{ padding: "20px", fontFamily: "Arial" }}>
-      <h1>Smart Job Recommendation System</h1>
-      <form onSubmit={handleSubmit}>
-        <input placeholder="Name" value={name} onChange={(e) => setName(e.target.value)} required /><br />
-        <input placeholder="Age" value={age} onChange={(e) => setAge(e.target.value)} required /><br />
-
-        <h3>Qualifications</h3>
-        {qualifications.map((q, index) => (
-          <input
-            key={index}
-            placeholder="Enter qualification"
-            value={q}
-            onChange={(e) => handleQualificationChange(index, e.target.value)}
-          />
-        ))}
-        <button type="button" onClick={handleAddQualification}>+ Add More</button>
-
-        <h3>Technical Skills</h3>
-        {allSkills.map(skill => (
-          <label key={skill}>
-            <input
-              type="checkbox"
-              value={skill}
-              checked={skills.includes(skill)}
-              onChange={(e) => {
-                if (e.target.checked) {
-                  setSkills([...skills, skill]);
-                } else {
-                  setSkills(skills.filter(s => s !== skill));
-                }
-              }}
-            /> {skill}
-          </label>
-        ))}
-
-        <h3>Strengths (Choose up to 3)</h3>
-        {allStrengths.map(st => (
-          <label key={st}>
-            <input
-              type="checkbox"
-              value={st}
-              checked={strengths.includes(st)}
-              onChange={(e) => {
-                if (e.target.checked && strengths.length < 3) {
-                  setStrengths([...strengths, st]);
-                } else {
-                  setStrengths(strengths.filter(s => s !== st));
-                }
-              }}
-            /> {st}
-          </label>
-        ))}
-
-        <br /><br />
-        <button type="submit">Find Jobs</button>
-      </form>
-
-      {recommendations.length > 0 && (
-        <div>
-          <h2>🎯 Recommended Jobs</h2>
-          <ul>
-            {recommendations.map((job, index) => (
-              <li key={index}>
-                <b>{job.title}</b>: {job.description}
-              </li>
-            ))}
-          </ul>
-        </div>
-      )}
-    </div>
-  );
+export default function handler(req, res) {
+  if (req.method === "POST") {
+    const { name, age, email, qualifications, skills, strengths } = req.body;
+    const newUser = { id: users.length + 1, name, age, email, qualifications, skills, strengths };
+    users.push(newUser);
+    res.status(201).json({ message: "✅ User added!", user: newUser });
+  } else if (req.method === "GET") {
+    res.status(200).json(users);
+  }
 }
+
 
 
 
