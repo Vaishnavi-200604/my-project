@@ -1,15 +1,164 @@
-let users = [];
+import sqlite3
+import os
 
-export default function handler(req, res) {
-  if (req.method === "POST") {
-    const { name, age, email, qualifications, skills, strengths } = req.body;
-    const newUser = { id: users.length + 1, name, age, email, qualifications, skills, strengths };
-    users.push(newUser);
-    res.status(201).json({ message: "✅ User added!", user: newUser });
-  } else if (req.method === "GET") {
-    res.status(200).json(users);
-  }
-}
+# ================================
+# Database Path (safe absolute)
+# ================================
+BASE_DIR = os.path.dirname(os.path.abspath(__file__))
+DB_PATH = os.path.join(BASE_DIR, "job_recommendation.db")
+
+# ================================
+# Database Setup
+# ================================
+def create_tables():
+    conn = sqlite3.connect(DB_PATH)
+    cursor = conn.cursor()
+
+    cursor.execute('''CREATE TABLE IF NOT EXISTS users (
+                        user_id INTEGER PRIMARY KEY AUTOINCREMENT,
+                        name TEXT NOT NULL,
+                        age INTEGER,
+                        email TEXT,
+                        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+                    )''')
+
+    cursor.execute('''CREATE TABLE IF NOT EXISTS qualifications (
+                        qual_id INTEGER PRIMARY KEY AUTOINCREMENT,
+                        user_id INTEGER,
+                        qualification TEXT NOT NULL,
+                        FOREIGN KEY(user_id) REFERENCES users(user_id)
+                    )''')
+
+    cursor.execute('''CREATE TABLE IF NOT EXISTS skills (
+                        skill_id INTEGER PRIMARY KEY AUTOINCREMENT,
+                        user_id INTEGER,
+                        skill TEXT NOT NULL,
+                        FOREIGN KEY(user_id) REFERENCES users(user_id)
+                    )''')
+
+    cursor.execute('''CREATE TABLE IF NOT EXISTS strengths (
+                        strength_id INTEGER PRIMARY KEY AUTOINCREMENT,
+                        user_id INTEGER,
+                        strength TEXT NOT NULL,
+                        FOREIGN KEY(user_id) REFERENCES users(user_id)
+                    )''')
+
+    cursor.execute('''CREATE TABLE IF NOT EXISTS jobs (
+                        job_id INTEGER PRIMARY KEY AUTOINCREMENT,
+                        job_title TEXT NOT NULL,
+                        description TEXT
+                    )''')
+
+    cursor.execute('''CREATE TABLE IF NOT EXISTS job_requirements (
+                        req_id INTEGER PRIMARY KEY AUTOINCREMENT,
+                        job_id INTEGER,
+                        requirement_type TEXT CHECK(requirement_type IN ('qualification','skill','strength')),
+                        requirement_value TEXT NOT NULL,
+                        FOREIGN KEY(job_id) REFERENCES jobs(job_id)
+                    )''')
+
+    conn.commit()
+    conn.close()
+
+
+# ================================
+# Insert Functions
+# ================================
+def add_user(name, age, email, qualifications, skills, strengths):
+    conn = sqlite3.connect(DB_PATH)
+    cursor = conn.cursor()
+
+    cursor.execute("INSERT INTO users (name, age, email) VALUES (?, ?, ?)", (name, age, email))
+    user_id = cursor.lastrowid
+
+    for q in qualifications:
+        cursor.execute("INSERT INTO qualifications (user_id, qualification) VALUES (?, ?)", (user_id, q))
+
+    for s in skills:
+        cursor.execute("INSERT INTO skills (user_id, skill) VALUES (?, ?)", (user_id, s))
+
+    for st in strengths[:3]:  # limit 3 strengths
+        cursor.execute("INSERT INTO strengths (user_id, strength) VALUES (?, ?)", (user_id, st))
+
+    conn.commit()
+    conn.close()
+    return user_id
+
+
+def add_job(job_title, description, requirements):
+    conn = sqlite3.connect(DB_PATH)
+    cursor = conn.cursor()
+
+    cursor.execute("INSERT INTO jobs (job_title, description) VALUES (?, ?)", (job_title, description))
+    job_id = cursor.lastrowid
+
+    for r_type, r_value in requirements:
+        cursor.execute("INSERT INTO job_requirements (job_id, requirement_type, requirement_value) VALUES (?, ?, ?)",
+                       (job_id, r_type, r_value))
+
+    conn.commit()
+    conn.close()
+    return job_id
+
+
+# ================================
+# Job Recommendation Logic
+# ================================
+def recommend_jobs(user_id):
+    conn = sqlite3.connect(DB_PATH)
+    cursor = conn.cursor()
+
+    cursor.execute("SELECT skill FROM skills WHERE user_id=?", (user_id,))
+    user_skills = {row[0] for row in cursor.fetchall()}
+
+    cursor.execute("SELECT strength FROM strengths WHERE user_id=?", (user_id,))
+    user_strengths = {row[0] for row in cursor.fetchall()}
+
+    recommendations = []
+
+    cursor.execute("SELECT job_id, job_title, description FROM jobs")
+    jobs = cursor.fetchall()
+
+    for job_id, job_title, description in jobs:
+        cursor.execute("SELECT requirement_type, requirement_value FROM job_requirements WHERE job_id=?", (job_id,))
+        requirements = cursor.fetchall()
+
+        matched = 0
+        total = len(requirements)
+
+        for r_type, r_value in requirements:
+            if r_type == "skill" and r_value in user_skills:
+                matched += 1
+            elif r_type == "strength" and r_value in user_strengths:
+                matched += 1
+
+        match_percentage = (matched / total) * 100 if total > 0 else 0
+        recommendations.append((job_title, description, round(match_percentage, 2)))
+
+    conn.close()
+    return sorted(recommendations, key=lambda x: x[2], reverse=True)
+
+
+# ================================
+# Main Program with Input
+# ================================
+if __name__ == "__main__":
+    create_tables()
+
+    # Add some jobs (only once; DB keeps them after first run)
+    add_job("Data Analyst", "Analyze datasets and create reports",
+            [("skill", "Python"), ("skill", "SQL"), ("strength", "Problem-solving")])
+
+    add_job("Marketing Manager", "Manage campaigns and brand visibility",
+            [("skill", "SEO"), ("strength", "Communication"), ("strength", "Creativity")])
+
+    add_job("Java Developer", "Develop and maintain Java applications",
+            [("skill", "Java"), ("skill", "OOP"), ("strength", "Teamwork")])
+
+    print("\n=== Smart Job Recommendation System ===")
+    name = input("Enter your name: ")
+
+
 
 
 
